@@ -28,6 +28,131 @@ const PIECES = [
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
+// Softened palette used by the "pastel" skin.
+const PASTEL_COLORS = [
+  null,
+  '#b3e5fc', // I
+  '#fff9c4', // O
+  '#e1bee7', // T
+  '#c8e6c9', // S
+  '#ffcdd2', // Z
+  '#bbdefb', // J
+  '#ffe0b2', // L
+];
+
+function drawRoundedRectPath(context, x, y, w, h, r) {
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.lineTo(x + w - r, y);
+  context.quadraticCurveTo(x + w, y, x + w, y + r);
+  context.lineTo(x + w, y + h - r);
+  context.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  context.lineTo(x + r, y + h);
+  context.quadraticCurveTo(x, y + h, x, y + h - r);
+  context.lineTo(x, y + r);
+  context.quadraticCurveTo(x, y, x + r, y);
+  context.closePath();
+}
+
+const SKINS = {
+  retro: {
+    label: 'Retro',
+    draw(context, x, y, colorIndex, size) {
+      const color = COLORS[colorIndex];
+      context.fillStyle = color;
+      context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+      context.fillStyle = blockHighlightColor;
+      context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+    },
+  },
+  neon: {
+    label: 'Neón',
+    boardBg: '#050508',
+    draw(context, x, y, colorIndex, size) {
+      const color = COLORS[colorIndex];
+      const px = x * size + 2;
+      const py = y * size + 2;
+      const w = size - 4;
+      const h = size - 4;
+      context.shadowBlur = size * 0.7;
+      context.shadowColor = color;
+      context.fillStyle = color;
+      context.fillRect(px, py, w, h);
+      context.shadowBlur = 0;
+      context.strokeStyle = 'rgba(255,255,255,0.55)';
+      context.lineWidth = 1;
+      context.strokeRect(px + 0.5, py + 0.5, Math.max(w - 1, 0), Math.max(h - 1, 0));
+    },
+  },
+  pastel: {
+    label: 'Pastel',
+    draw(context, x, y, colorIndex, size) {
+      const color = PASTEL_COLORS[colorIndex];
+      const px = x * size + 1;
+      const py = y * size + 1;
+      const w = size - 2;
+      const h = size - 2;
+      const r = Math.min(6, w / 3, h / 3);
+      context.fillStyle = color;
+      if (typeof context.roundRect === 'function') {
+        context.beginPath();
+        context.roundRect(px, py, w, h, r);
+        context.fill();
+      } else {
+        drawRoundedRectPath(context, px, py, w, h, r);
+        context.fill();
+      }
+      context.fillStyle = 'rgba(255,255,255,0.45)';
+      const highlightH = Math.max(h * 0.35, 3);
+      if (typeof context.roundRect === 'function') {
+        context.beginPath();
+        context.roundRect(px, py, w, highlightH, [r, r, 0, 0]);
+        context.fill();
+      } else {
+        const hr = Math.min(r, highlightH / 2);
+        context.beginPath();
+        context.moveTo(px + hr, py);
+        context.lineTo(px + w - hr, py);
+        context.quadraticCurveTo(px + w, py, px + w, py + hr);
+        context.lineTo(px + w, py + highlightH);
+        context.lineTo(px, py + highlightH);
+        context.lineTo(px, py + hr);
+        context.quadraticCurveTo(px, py, px + hr, py);
+        context.closePath();
+        context.fill();
+      }
+    },
+  },
+  pixel: {
+    label: 'Pixel art',
+    draw(context, x, y, colorIndex, size) {
+      const color = COLORS[colorIndex];
+      const px = x * size + 1;
+      const py = y * size + 1;
+      const w = size - 2;
+      const h = size - 2;
+      context.fillStyle = color;
+      context.fillRect(px, py, w, h);
+      const cell = Math.max(2, Math.floor(size / 6));
+      context.fillStyle = 'rgba(0,0,0,0.18)';
+      for (let ry = 0; ry * cell < h; ry++) {
+        for (let rx = 0; rx * cell < w; rx++) {
+          if ((rx + ry) % 2 === 0) {
+            const bx = px + rx * cell;
+            const by = py + ry * cell;
+            const bw = Math.min(cell, px + w - bx);
+            const bh = Math.min(cell, py + h - by);
+            context.fillRect(bx, by, bw, bh);
+          }
+        }
+      }
+      context.strokeStyle = 'rgba(0,0,0,0.35)';
+      context.lineWidth = 1;
+      context.strokeRect(px + 0.5, py + 0.5, Math.max(w - 1, 0), Math.max(h - 1, 0));
+    },
+  },
+};
+
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-canvas');
@@ -58,6 +183,7 @@ const nameInput = document.getElementById('name-input');
 const overlayRecordsPanel = document.getElementById('overlay-records-panel');
 const overlayRecordsList = document.getElementById('overlay-records-list');
 const overlayRecordsSummary = document.getElementById('overlay-records-summary');
+const skinSelect = document.getElementById('skin-select');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let gameStarted = false;
@@ -227,6 +353,33 @@ if (nameInput) {
   });
 }
 
+const SKIN_KEY = 'tetris-skin';
+let currentSkin = 'retro';
+
+function applySkin(skin) {
+  currentSkin = SKINS[skin] ? skin : 'retro';
+  if (skinSelect) skinSelect.value = currentSkin;
+}
+
+function loadSkin() {
+  const stored = localStorage.getItem(SKIN_KEY);
+  return SKINS[stored] ? stored : 'retro';
+}
+
+applySkin(loadSkin());
+
+if (skinSelect) {
+  skinSelect.addEventListener('change', () => {
+    const skin = skinSelect.value;
+    localStorage.setItem(SKIN_KEY, skin);
+    applySkin(skin);
+    if (typeof current !== 'undefined' && current) {
+      draw();
+      drawNext();
+    }
+  });
+}
+
 if (resetRecordsBtn) resetRecordsBtn.addEventListener('click', clearRecords);
 if (resetRecordsBtnOverlay) resetRecordsBtnOverlay.addEventListener('click', clearRecords);
 
@@ -357,13 +510,13 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const skin = SKINS[currentSkin] || SKINS.retro;
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = blockHighlightColor;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  context.shadowBlur = 0;
+  context.shadowColor = 'transparent';
+  skin.draw(context, x, y, colorIndex, size);
+  context.shadowBlur = 0;
+  context.shadowColor = 'transparent';
   context.globalAlpha = 1;
 }
 
@@ -386,6 +539,11 @@ function drawGrid() {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const skin = SKINS[currentSkin] || SKINS.retro;
+  if (skin.boardBg) {
+    ctx.fillStyle = skin.boardBg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
   drawGrid();
 
   // board
@@ -409,6 +567,11 @@ function draw() {
 function drawNext() {
   const NB = 30;
   nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  const skin = SKINS[currentSkin] || SKINS.retro;
+  if (skin.boardBg) {
+    nextCtx.fillStyle = skin.boardBg;
+    nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+  }
   const shape = next.shape;
   const offX = Math.floor((4 - shape[0].length) / 2);
   const offY = Math.floor((4 - shape.length) / 2);
