@@ -16,12 +16,6 @@
           <span class="theme-switch-thumb"></span>
         </span>
       </label>
-      <select id="skin-select" class="skin-select" title="Elegir apariencia de las piezas" aria-label="Elegir apariencia de las piezas">
-        <option value="retro">Retro</option>
-        <option value="neon">Neón</option>
-        <option value="pastel">Pastel</option>
-        <option value="pixel">Pixel art</option>
-      </select>
     </div>
     <div class="game-container">
       <canvas id="board" width="300" height="600"></canvas>
@@ -58,78 +52,11 @@
       </aside>
     </div>
 
-    <div id="start-screen" class="overlay">
-      <div class="overlay-box records-box">
-        <p id="start-title">TETRIS</p>
-        <div class="records-panel">
-          <h2 class="records-title">Mejores Puntuaciones</h2>
-          <div id="start-records-list" class="records-list"></div>
-          <p id="start-records-summary" class="records-summary"></p>
-          <button id="reset-records-btn" class="secondary-btn">Resetear records</button>
-        </div>
-        <button id="start-btn">Jugar</button>
-      </div>
-    </div>
-
     <div id="overlay" class="overlay hidden">
-      <div class="overlay-box records-box">
+      <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
-        <div id="name-entry" class="name-entry hidden">
-          <label for="name-input">¡Nuevo récord! Ingresa tu nombre:</label>
-          <input type="text" id="name-input" maxlength="12" placeholder="Nombre" autocomplete="off" />
-        </div>
-        <div id="overlay-records-panel" class="records-panel">
-          <h2 class="records-title">Mejores Puntuaciones</h2>
-          <div id="overlay-records-list" class="records-list"></div>
-          <p id="overlay-records-summary" class="records-summary"></p>
-          <button id="reset-records-btn-overlay" class="secondary-btn">Resetear records</button>
-        </div>
         <button id="restart-btn">Reiniciar</button>
-      </div>
-    </div>
-
-    <div id="pause-menu" class="pause-menu hidden">
-      <div class="pause-menu-box">
-        <p id="pause-menu-title">PAUSA</p>
-
-        <div class="pause-menu-field">
-          <label for="start-level-select">Nivel inicial</label>
-          <select id="start-level-select">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="12">12</option>
-            <option value="13">13</option>
-            <option value="14">14</option>
-            <option value="15">15</option>
-          </select>
-        </div>
-
-        <div class="pause-menu-actions">
-          <button id="resume-btn">Reanudar</button>
-          <button id="pause-restart-btn">Reiniciar</button>
-          <button id="controls-toggle-btn">Ver controles</button>
-        </div>
-
-        <div class="panel-section controls pause-controls hidden" id="pause-controls">
-          <span class="label">CONTROLS</span>
-          <ul>
-            <li><kbd>←</kbd><kbd>→</kbd> mover</li>
-            <li><kbd>↑</kbd> rotar</li>
-            <li><kbd>↓</kbd> bajar</li>
-            <li><kbd>Space</kbd> caída</li>
-            <li><kbd>P</kbd> pausa</li>
-          </ul>
-        </div>
       </div>
     </div>
   </div>
