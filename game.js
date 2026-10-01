@@ -6,13 +6,13 @@ const BLOCK = 30;
 
 const COLORS = [
   null,
-  '#4dd0e1', // I - cyan
+  '#fff176', // I - light yellow
   '#ffd54f', // O - yellow
-  '#ba68c8', // T - purple
-  '#81c784', // S - green
-  '#e57373', // Z - red
-  '#64b5f6', // J - pale blue
-  '#ffb74d', // L - orange
+  '#ffeb3b', // T - bright yellow
+  '#fdd835', // S - golden yellow
+  '#fff59d', // Z - pale yellow
+  '#ffca28', // J - amber yellow
+  '#fbc02d', // L - deep yellow
 ];
 
 const PIECES = [
